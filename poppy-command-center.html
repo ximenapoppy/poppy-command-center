@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Poppy Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --olive:#4a5240; --olive-light:#6b7560; --olive-dark:#2e3328; --olive-pale:#e8ece4;
+  --cream:#f8f5f0; --warm-white:#fefcf9; --blush:#e8d9cc; --blush-dark:#c9a98f;
+  --text-dark:#1e1e1e; --text-mid:#5a5a5a; --text-light:#9a9a9a;
+  --card-border:#e4ded6; --green-good:#4a7c59; --red-warn:#b94a48; --amber:#c8823a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;}
+
+header{background:var(--olive-dark);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;}
+.header-left{display:flex;align-items:center;gap:14px;}
+.logo{width:40px;height:40px;background:var(--warm-white);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:14px;color:var(--olive-dark);font-weight:600;}
+.header-title h1{font-family:'Playfair Display',serif;font-size:20px;color:var(--warm-white);font-weight:400;}
+.header-title p{font-size:11px;color:#a0a88e;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:20px;}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:#7cb87c;letter-spacing:1px;text-transform:uppercase;font-weight:600;}
+.live-dot{width:7px;height:7px;background:#7cb87c;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+.header-date{font-size:13px;color:var(--blush);font-weight:300;}
+.refresh-btn{padding:6px 14px;border:1px solid rgba(255,255,255,0.2);border-radius:20px;color:var(--cream);font-size:11px;cursor:pointer;background:transparent;font-family:'Inter',sans-serif;letter-spacing:0.5px;}
+.refresh-btn:hover{background:rgba(255,255,255,0.1);}
+
+.tab-bar{background:var(--olive-dark);border-top:1px solid rgba(255,255,255,0.08);padding:0 40px;display:flex;gap:4px;}
+.tab-btn{padding:10px 18px;font-size:12px;font-weight:500;color:#a0a88e;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;letter-spacing:0.5px;font-family:'Inter',sans-serif;transition:color 0.2s;}
+.tab-btn.active{color:var(--warm-white);border-bottom:2px solid #7cb87c;}
+.tab-btn:hover:not(.active){color:var(--cream);}
+
+.tab-content{display:none;max-width:1400px;margin:0 auto;padding:32px 40px 60px;}
+.tab-content.active{display:block;}
+
+.section-label{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--text-light);font-weight:600;margin:32px 0 14px;display:flex;align-items:center;gap:10px;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--card-border);}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+
+.card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:22px;}
+.card-sm{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:16px;}
+
+.stat-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:20px;}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);margin-bottom:6px;font-weight:500;}
+.stat-value{font-size:28px;font-weight:700;color:var(--text-dark);line-height:1;font-variant-numeric:tabular-nums;}
+.stat-sub{font-size:12px;color:var(--text-light);margin-top:5px;}
+
+.strip{background:var(--olive-dark);border-radius:12px;padding:20px 28px;display:flex;align-items:center;justify-content:space-around;gap:16px;flex-wrap:wrap;margin-bottom:8px;}
+.strip-item{text-align:center;}
+.strip-item .sl{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#8a9280;margin-bottom:3px;}
+.strip-item .sv{font-size:24px;font-weight:700;color:var(--warm-white);}
+.strip-item .ss{font-size:10px;color:#8a9280;margin-top:2px;}
+.strip-div{width:1px;height:40px;background:rgba(255,255,255,0.1);}
+
+.post-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.post-header{padding:14px 16px;border-bottom:1px solid var(--card-border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.post-thumb{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:var(--blush);}
+.post-info{flex:1;min-width:0;}
+.post-title{font-size:13px;font-weight:600;color:var(--text-dark);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.post-meta{font-size:11px;color:var(--text-light);margin-top:2px;}
+.post-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.badge-top{background:#fef3e2;color:#c8823a;border:1px solid #f5d9a8;}
+.badge-good{background:#e8f4e8;color:var(--green-good);border:1px solid #b8ddb8;}
+.badge-low{background:#fce8e8;color:var(--red-warn);border:1px solid #f0b8b8;}
+
+.post-metrics{display:grid;grid-template-columns:repeat(5,1fr);padding:12px 16px;gap:8px;border-bottom:1px solid var(--card-border);}
+.pm-item{text-align:center;}
+.pm-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:3px;}
+.pm-value{font-size:15px;font-weight:700;color:var(--text-dark);}
+.pm-value.highlight{color:var(--olive);}
+
+.post-why{padding:12px 16px;background:var(--cream);border-bottom:1px solid var(--card-border);}
+.post-why-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--olive-light);margin-bottom:5px;}
+.post-why-text{font-size:12px;color:var(--text-mid);line-height:1.5;}
+
+.post-comments{padding:12px 16px;}
+.comment-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:8px;}
+.comment-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.comment-item:last-child{margin-bottom:0;}
+.comment-avatar{width:24px;height:24px;border-radius:50%;background:var(--blush);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;font-weight:600;color:var(--olive-dark);}
+.comment-body{flex:1;}
+.comment-user{font-size:11px;font-weight:600;color:var(--text-dark);}
+.comment-text{font-size:12px;color:var(--text-mid);line-height:1.4;margin-top:1px;}
+.comment-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:8px;margin-left:4px;font-weight:500;}
+.tag-price{background:#fff3e0;color:#e65100;}
+.tag-praise{background:#e8f5e9;color:#2e7d32;}
+.tag-question{background:#e3f2fd;color:#1565c0;}
+.tag-complaint{background:#fce4ec;color:#880e4f;}
+
+.goal-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:20px;}
+.goal-title{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.goal-bar-track{height:8px;background:var(--olive-pale);border-radius:4px;overflow:hidden;margin-bottom:12px;}
+.goal-bar-fill{height:100%;border-radius:4px;background:var(--olive);transition:width 0.5s;}
+.goal-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.goal-stat{text-align:center;padding:10px 6px;background:var(--cream);border-radius:8px;}
+.goal-stat .gl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);margin-bottom:3px;}
+.goal-stat .gv{font-size:14px;font-weight:700;color:var(--text-dark);}
+
+.ab-table{width:100%;border-collapse:collapse;font-size:13px;}
+.ab-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);border-bottom:2px solid var(--card-border);font-weight:500;}
+.ab-table td{padding:10px 12px;border-bottom:1px solid var(--card-border);color:var(--text-mid);}
+.ab-table tr:last-child td{border-bottom:none;}
+.ab-table .winner-row td{background:#f0f7f0;font-weight:600;color:var(--text-dark);}
+.ab-winner-badge{font-size:10px;background:var(--green-good);color:white;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px;}
+
+.why-card{background:var(--olive-dark);border-radius:12px;padding:24px;color:var(--warm-white);}
+.why-card h3{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;font-style:italic;margin-bottom:6px;}
+.why-card p{font-size:12px;color:#a0a88e;margin-bottom:20px;line-height:1.5;}
+.why-comment{background:rgba(255,255,255,0.07);border-left:3px solid #7cb87c;border-radius:0 8px 8px 0;padding:14px 16px;margin-bottom:10px;}
+.why-comment:last-child{margin-bottom:0;}
+.why-quote{font-size:14px;line-height:1.5;color:var(--warm-white);font-style:italic;margin-bottom:8px;}
+.why-source{font-size:11px;color:#8a9280;display:flex;align-items:center;gap:6px;}
+.why-source strong{color:#c0c8b0;}
+.why-platform-tag{font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,0.1);}
+
+.lt-table{width:100%;border-collapse:collapse;}
+.lt-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);border-bottom:2px solid var(--card-border);font-weight:500;}
+.lt-table td{padding:10px 12px;border-bottom:1px solid var(--card-border);font-size:13px;color:var(--text-mid);}
+.lt-table tr:last-child td{border-bottom:none;}
+.lt-bar{height:6px;background:var(--olive-pale);border-radius:3px;overflow:hidden;min-width:80px;}
+.lt-bar-fill{height:100%;background:var(--olive);border-radius:3px;}
+.lt-suggestion{font-size:11px;color:var(--amber);font-style:italic;}
+
+.pillar-bars{display:flex;flex-direction:column;gap:10px;}
+.pillar-row{display:flex;align-items:center;gap:10px;}
+.pillar-name{font-size:12px;color:var(--text-mid);width:180px;flex-shrink:0;}
+.pillar-track{flex:1;height:10px;background:var(--olive-pale);border-radius:5px;overflow:hidden;}
+.pillar-fill{height:100%;border-radius:5px;}
+.pillar-pct{font-size:12px;font-weight:600;color:var(--text-dark);width:36px;text-align:right;flex-shrink:0;}
+
+.trend-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--card-border);}
+.trend-item:last-child{border-bottom:none;padding-bottom:0;}
+.trend-num{font-size:11px;font-weight:700;color:var(--blush-dark);width:20px;flex-shrink:0;margin-top:2px;}
+.trend-emoji{font-size:18px;flex-shrink:0;}
+.trend-body{flex:1;}
+.trend-title{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:2px;}
+.trend-desc{font-size:12px;color:var(--text-mid);line-height:1.4;}
+.trend-action{font-size:11px;font-weight:600;color:var(--olive);margin-top:4px;}
+
+.insight-box{background:linear-gradient(135deg,var(--olive-pale),#f0eee8);border:1px solid var(--card-border);border-radius:12px;padding:20px;border-left:4px solid var(--olive);}
+.insight-box h4{font-size:13px;font-weight:600;color:var(--olive-dark);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.insight-box p{font-size:12px;color:var(--text-mid);line-height:1.6;}
+
+.idea-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:20px;border-top:3px solid var(--olive);}
+.idea-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--olive-light);margin-bottom:8px;}
+.idea-hook{font-size:15px;font-weight:600;color:var(--text-dark);margin-bottom:8px;font-style:italic;line-height:1.3;}
+.idea-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.idea-tag{font-size:10px;padding:3px 10px;border-radius:12px;font-weight:500;}
+.idea-format{background:var(--olive-pale);color:var(--olive-dark);}
+.idea-platform{background:#e8eef8;color:#3a5490;}
+.idea-why{font-size:12px;color:var(--text-mid);line-height:1.5;}
+
+.benchmark-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--card-border);}
+.benchmark-row:last-child{border-bottom:none;}
+.bm-label{font-size:12px;color:var(--text-mid);flex:1;}
+.bm-value{font-size:14px;font-weight:700;color:var(--text-dark);min-width:60px;text-align:right;}
+.bm-bench{font-size:11px;color:var(--text-light);min-width:90px;text-align:right;}
+.bm-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dot-good{background:var(--green-good);}
+.dot-warn{background:var(--amber);}
+.dot-bad{background:var(--red-warn);}
+
+.quick-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.quick-link{display:flex;align-items:center;gap:7px;padding:8px 16px;background:var(--warm-white);border:1px solid var(--card-border);border-radius:20px;text-decoration:none;font-size:12px;color:var(--text-mid);font-weight:500;transition:border-color 0.2s;}
+.quick-link:hover{border-color:var(--olive-light);}
+
+footer{text-align:center;padding:16px;font-size:11px;color:var(--text-light);border-top:1px solid var(--card-border);letter-spacing:1px;}
+
+@media(max-width:900px){
+  .grid-4,.grid-5{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:1fr 1fr;}
+  .tab-content{padding:20px;}
+  header,.tab-bar{padding-left:20px;padding-right:20px;}
+}
+@media(max-width:600px){
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .strip{flex-direction:column;gap:12px;}
+  .strip-div{width:40px;height:1px;}
+}
+
+/* ── AD INTELLIGENCE STYLES ── */
+.ai-section-label{font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--blush-dark);font-weight:700;margin:28px 0 12px;display:flex;align-items:center;gap:10px;}
+.ai-section-label::after{content:'';flex:1;height:1px;background:var(--card-border);}
+
+.ai-territory-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+.ai-territory-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:18px;border-top:3px solid var(--olive);}
+.ai-territory-card.t1{border-top-color:#4a7c59;}
+.ai-territory-card.t2{border-top-color:var(--blush-dark);}
+.ai-territory-card.t3{border-top-color:#3a5490;}
+.ai-territory-card.t4{border-top-color:#7a5c8a;}
+.ai-t-code{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+.ai-territory-card.t1 .ai-t-code{color:#4a7c59;}
+.ai-territory-card.t2 .ai-t-code{color:var(--blush-dark);}
+.ai-territory-card.t3 .ai-t-code{color:#3a5490;}
+.ai-territory-card.t4 .ai-t-code{color:#7a5c8a;}
+.ai-t-name{font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:6px;line-height:1.3;}
+.ai-t-cvr{font-size:20px;font-weight:800;letter-spacing:-0.5px;margin-bottom:2px;}
+.ai-territory-card.t1 .ai-t-cvr{color:#4a7c59;}
+.ai-territory-card.t2 .ai-t-cvr{color:var(--blush-dark);}
+.ai-territory-card.t3 .ai-t-cvr{color:#3a5490;}
+.ai-territory-card.t4 .ai-t-cvr{color:#9a9a9a;}
+.ai-t-status{font-size:11px;margin-bottom:8px;}
+.ai-t-hook{font-size:11px;color:var(--text-light);font-style:italic;border-top:1px solid var(--card-border);margin-top:8px;padding-top:8px;line-height:1.4;}
+
+.ai-persona-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.ai-persona-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:14px;padding:22px;}
+.ai-persona-card.p1{border-left:4px solid #4a7c59;}
+.ai-persona-card.p2{border-left:4px solid #3a5490;}
+.ai-persona-card.p3{border-left:4px solid #7a5c8a;}
+.ai-persona-rank{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;}
+.ai-persona-card.p1 .ai-persona-rank{color:#4a7c59;}
+.ai-persona-card.p2 .ai-persona-rank{color:#3a5490;}
+.ai-persona-card.p3 .ai-persona-rank{color:#7a5c8a;}
+.ai-persona-name{font-size:17px;font-weight:800;color:var(--text-dark);margin-bottom:2px;}
+.ai-persona-territory{font-size:11px;color:var(--text-light);margin-bottom:10px;}
+.ai-persona-desc{font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;}
+.ai-persona-arc{font-size:11px;background:var(--cream);border-radius:8px;padding:8px 12px;margin-bottom:10px;color:var(--text-mid);}
+.ai-persona-arc span{color:var(--olive);font-weight:600;}
+.ai-persona-quote{font-size:12px;font-style:italic;border-left:2px solid var(--blush-dark);padding-left:10px;color:var(--text-mid);margin-bottom:12px;line-height:1.5;}
+.ai-persona-tags{display:flex;flex-wrap:wrap;gap:5px;}
+.ai-persona-tag{background:var(--olive-pale);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--olive-dark);}
+
+.ai-hook-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.ai-hook-bar-label{font-size:12px;width:110px;flex-shrink:0;color:var(--text-mid);}
+.ai-hook-bar-track{flex:1;height:7px;background:var(--olive-pale);border-radius:4px;overflow:hidden;}
+.ai-hook-bar-fill{height:100%;border-radius:4px;}
+.ai-hook-bar-count{font-size:12px;color:var(--text-light);width:18px;text-align:right;flex-shrink:0;}
+
+.ai-format-card{background:var(--cream);border-radius:8px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--olive-light);}
+.ai-format-card:last-child{margin-bottom:0;}
+.ai-format-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--olive);margin-bottom:5px;}
+.ai-format-desc{font-size:12px;color:var(--text-mid);line-height:1.5;}
+.ai-format-example{font-size:11px;color:var(--text-light);font-style:italic;margin-top:5px;}
+
+.ai-chart-card{background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:20px;}
+.ai-chart-card h3{font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:16px;}
+.ai-chart-wrap{position:relative;height:240px;}
+
+.ai-cvr-pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:middle;}
+.ai-pill-scale{background:#e8f4e8;color:var(--green-good);}
+.ai-pill-queue{background:var(--olive-pale);color:var(--olive-light);}
+
+.ai-ads-table{width:100%;border-collapse:collapse;}
+.ai-ads-table th{text-align:left;padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-light);border-bottom:2px solid var(--card-border);font-weight:600;}
+.ai-ads-table td{padding:12px;border-bottom:1px solid var(--card-border);vertical-align:top;}
+.ai-ads-table tr:last-child td{border-bottom:none;}
+.ai-ads-table tr:hover td{background:var(--cream);}
+.ai-rank{font-size:16px;font-weight:800;color:var(--text-light);}
+.ai-rank.top{color:var(--blush-dark);}
+.ai-concept-name{font-weight:600;font-size:13px;color:var(--text-dark);margin-bottom:3px;}
+.ai-concept-hook{font-size:11px;color:var(--text-light);font-style:italic;line-height:1.4;}
+.ai-format-badge{display:inline-block;background:var(--olive-pale);border-radius:4px;padding:2px 7px;font-size:10px;color:var(--olive-dark);}
+.ai-t-badge{display:inline-block;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;}
+.ai-t1-b{background:rgba(74,124,89,0.12);color:#4a7c59;}
+.ai-t2-b{background:rgba(201,169,143,0.2);color:var(--blush-dark);}
+.ai-t3-b{background:rgba(58,84,144,0.12);color:#3a5490;}
+.ai-cvr-val{font-size:15px;font-weight:800;color:#4a7c59;}
+.ai-cvr-new{font-size:15px;font-weight:800;color:var(--text-light);}
+
+.ai-donut-layout{display:flex;align-items:center;gap:24px;}
+.ai-donut-wrap{width:160px;height:160px;flex-shrink:0;position:relative;}
+.ai-legend{list-style:none;}
+.ai-legend li{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:9px;}
+.ai-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ai-legend-pct{font-weight:700;color:var(--text-dark);}
+.ai-legend-lbl{color:var(--text-mid);}
+
+.ai-stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.ai-stat-mini{background:var(--warm-white);border:1px solid var(--card-border);border-radius:10px;padding:16px;}
+.ai-stat-mini .sl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-light);margin-bottom:5px;font-weight:500;}
+.ai-stat-mini .sv{font-size:26px;font-weight:800;color:var(--text-dark);line-height:1;letter-spacing:-0.5px;}
+.ai-stat-mini .ss{font-size:11px;color:var(--text-light);margin-top:3px;}
+.ai-stat-mini.hi .sv{color:#4a7c59;}
+.ai-stat-mini.hi2 .sv{color:#3a5490;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="logo">PO</div>
+    <div class="header-title">
+      <h1>Poppy Command Center</h1>
+      <p>Social &amp; Marketing Intelligence</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div> Live</div>
+    <div class="header-date" id="headerDate"></div>
+    <button class="refresh-btn" onclick="location.reload()">↻ Refresh</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('overview',this)">🌸 Overview</button>
+  <button class="tab-btn" onclick="showTab('instagram',this)">📸 Instagram</button>
+  <button class="tab-btn" onclick="showTab('tiktok',this)">🎵 TikTok</button>
+  <button class="tab-btn" onclick="showTab('pinterest',this)">📌 Pinterest</button>
+  <button class="tab-btn" onclick="showTab('ads',this)">📊 Paid Ads</button>
+  <button class="tab-btn" onclick="showTab('intel',this)">🧠 Intelligence</button>
+  <button class="tab-btn" onclick="showTab('trends',this)">🔥 Trends</button>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: OVERVIEW -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content active" id="tab-overview">
+
+  <div class="section-label">Today's Snapshot</div>
+
+  <!-- LIVE BUSINESS METRICS -->
+  <div class="strip" style="margin-bottom:8px;">
+    <div class="strip-item"><div class="sl">Bookings Abril</div><div class="sv" style="color:#7cb87c;">113</div><div class="ss">vs 419 marzo</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">Leads Abril</div><div class="sv">2,145</div><div class="ss">vs 5,805 marzo</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">CVR Abril</div><div class="sv" style="color:#7cb87c;">5.3%</div><div class="ss">leads → bookings</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">Revenue Abril</div><div class="sv">$356K</div><div class="ss">avg orden $3,205</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">Meta Spend Abril</div><div class="sv">$5,761</div><div class="ss">CTR 2.60%</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">CPL Meta</div><div class="sv" style="color:#7cb87c;">~$4</div><div class="ss">1,373 leads fb · abr</div></div>
+  </div>
+
+  <div class="strip">
+    <div class="strip-item"><div class="sl">Instagram</div><div class="sv">63.7K</div><div class="ss">followers · Updated Apr 9</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">TikTok</div><div class="sv">2,637</div><div class="ss">followers · Updated Apr 9</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">Pinterest</div><div class="sv">603.5K</div><div class="ss">monthly views</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">IG Reach 28D</div><div class="sv">208K</div><div class="ss">Updated Apr 9</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">IG Save Rate</div><div class="sv">3.59%</div><div class="ss">top post · Updated Apr 9</div></div>
+    <div class="strip-div"></div>
+    <div class="strip-item"><div class="sl">Top TikTok</div><div class="sv">2.3M</div><div class="ss">views (all time)</div></div>
+  </div>
+
+  <!-- Goal trackers -->
+  <div class="section-label">Goals — Road to Milestones</div>
+  <div class="grid-3">
+    <div class="goal-card">
+      <div class="goal-title">📸 Road to 100K on Instagram</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">63,657 / 100,000 followers · Updated Apr 9</div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:63.7%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat"><div class="gl">YTD Growth</div><div class="gv">—</div></div>
+        <div class="goal-stat"><div class="gl">Monthly Pace</div><div class="gv">+726</div></div>
+        <div class="goal-stat"><div class="gl">Remaining</div><div class="gv">36,343</div></div>
+        <div class="goal-stat"><div class="gl">ETA</div><div class="gv">—</div></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="goal-title">🎵 Road to 5K on TikTok</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">2,637 / 5,000 followers · Updated Apr 9</div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:52.7%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat"><div class="gl">YTD Growth</div><div class="gv">—</div></div>
+        <div class="goal-stat"><div class="gl">Monthly Pace</div><div class="gv">+84 (Mar)</div></div>
+        <div class="goal-stat"><div class="gl">Remaining</div><div class="gv">2,363</div></div>
+        <div class="goal-stat"><div class="gl">ETA</div><div class="gv">—</div></div>
+      </div>
+    </div>
+    <div class="goal-card">
+      <div class="goal-title">📌 Road to 1M views/mo Pinterest</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">603,500 / 1,000,000 monthly views</div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:60.35%"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat"><div class="gl">Current</div><div class="gv">603K</div></div>
+        <div class="goal-stat"><div class="gl">Monthly Δ</div><div class="gv">—</div></div>
+        <div class="goal-stat"><div class="gl">Remaining</div><div class="gv">396K</div></div>
+        <div class="goal-stat"><div class="gl">Pace</div><div class="gv">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta Campaigns -->
+  <div class="section-label">📊 Top Meta Campaigns · This Month</div>
+  <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;margin-bottom:8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="background:var(--olive-pale);">
+          <th style="padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Campaign</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Spend</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Leads</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">CPL</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">ROAS</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">CTR</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;font-weight:600;color:var(--text-dark);">Price Range - Carousel - May</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">$8,143</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--amber);font-weight:700;">2.20%</td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#fef3e2;color:#c8823a;font-weight:600;">Iterate</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;font-weight:600;color:var(--text-dark);">POV - Video - May</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">$2,614</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--green-good);font-weight:700;">3.52%</td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#e8f4e8;color:#4a7c59;font-weight:600;">Scale</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;font-weight:600;color:var(--text-dark);">Influencer Lindsey - Video 2 - Sept</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">$1,284</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--green-good);font-weight:700;">3.56%</td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#e8f4e8;color:#4a7c59;font-weight:600;">Scale</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;font-weight:600;color:var(--text-dark);">Product Pricing - Video - May</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">$1,131</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--green-good);font-weight:700;">2.81%</td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#e8f4e8;color:#4a7c59;font-weight:600;">Scale</span></td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;font-weight:600;color:var(--text-dark);">Price-Value Showcase - Video - May 🏆</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">$409</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--green-good);font-weight:700;">4.78%</td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#e8f4e8;color:#4a7c59;font-weight:600;">Scale ↑</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:12px 16px;background:var(--cream);border-top:1px solid var(--card-border);font-size:11px;color:var(--text-light);">
+      📊 Datos en vivo desde Data Warehouse · Últimos 30 días · Spend total abril: <strong>$5,761</strong> · Impressions: <strong>384,856</strong> · CTR promedio: <strong>2.60%</strong> · CPL Meta: <strong>~$4</strong> · Actualizado Apr 14
+    </div>
+  </div>
+
+  <!-- Top Organic Posts Driving Traffic -->
+  <div class="section-label">🚦 Top Organic Posts Driving Traffic · This Month</div>
+  <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;overflow:hidden;margin-bottom:8px;">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead>
+        <tr style="background:var(--olive-pale);">
+          <th style="padding:10px 16px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Post</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Channel</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Reach</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Profile Visits</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Ext. Link Clicks</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Saves</th>
+          <th style="padding:10px 16px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-light);font-weight:600;border-bottom:1px solid var(--card-border);">Save Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;">
+            <div style="font-weight:600;color:var(--text-dark);">Selena Gomez bridal flowers</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:2px;">Reel · Apr 2026</div>
+          </td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#fce4ec;color:#880e4f;font-weight:600;">TikTok</span></td>
+          <td style="padding:12px 16px;text-align:center;font-weight:600;">63.4K</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--card-border);">
+          <td style="padding:12px 16px;">
+            <div style="font-weight:600;color:var(--text-dark);">2026 is not for playing it safe — wedding color trends</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:2px;">Carousel · Apr 6 · Updated Apr 9</div>
+          </td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#e8f4e8;color:var(--green-good);font-weight:600;">Instagram</span></td>
+          <td style="padding:12px 16px;text-align:center;font-weight:600;">230,460</td>
+          <td style="padding:12px 16px;text-align:center;font-weight:600;">2,647</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;font-weight:600;color:var(--green-good);">8,279</td>
+          <td style="padding:12px 16px;text-align:center;font-weight:600;color:var(--green-good);">3.59%</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;">
+            <div style="font-weight:600;color:var(--text-dark);">— Pinterest Analytics (canvas-based, no accesible automáticamente)</div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:2px;">Pin · revisar manualmente en analytics.pinterest.com</div>
+          </td>
+          <td style="padding:12px 16px;text-align:center;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#fce4ec;color:#880e4f;font-weight:600;">Pinterest</span></td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+          <td style="padding:12px 16px;text-align:center;color:var(--text-mid);">—</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:12px 16px;background:var(--cream);border-top:1px solid var(--card-border);font-size:11px;color:var(--text-light);">
+      🔗 Connect Meta Business Manager (Instagram Insights) to auto-fill organic post traffic data.
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="section-label">💡 Key Insights</div>
+  <div class="grid-2">
+    <div class="insight-box">
+      <h4>🌸 Pinterest is Poppy's most underutilized channel</h4>
+      <p>603.5K monthly views with only 611 followers means Pinterest is driving massive organic reach without active work. Increasing pin frequency and optimizing wedding keywords could double that number in 60 days and drive direct traffic to poppyflowers.com.</p>
+    </div>
+    <div class="insight-box">
+      <h4>📌 Saves are the most valuable metric for Poppy</h4>
+      <p>For a wedding florist, saves signal purchase intent — a bride who saves a post is actively considering booking. Prioritize content that drives saves (inspiration, flower-by-month lists, price breakdowns) over content that just generates likes.</p>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="section-label">Quick Links</div>
+  <div class="quick-links">
+    <a href="https://www.instagram.com/poppyflowersco/" target="_blank" class="quick-link">📸 Instagram</a>
+    <a href="https://www.tiktok.com/@poppyflowersco" target="_blank" class="quick-link">🎵 TikTok</a>
+    <a href="https://www.pinterest.com/poppyflowersco/" target="_blank" class="quick-link">📌 Pinterest</a>
+    <a href="https://app.linktr.ee" target="_blank" class="quick-link">🌿 Linktree Admin</a>
+    <a href="https://business.facebook.com/adsmanager" target="_blank" class="quick-link">📊 Meta Ads Manager</a>
+    <a href="https://ads.google.com" target="_blank" class="quick-link">🔍 Google Ads</a>
+    <a href="https://poppyflowers.com" target="_blank" class="quick-link">🌸 Website</a>
+    <a href="https://www.notion.so" target="_blank" class="quick-link">📋 Notion</a>
+    <a href="https://analytics.pinterest.com" target="_blank" class="quick-link">📈 Pinterest Analytics</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: INSTAGRAM -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-instagram">
+
+  <div class="section-label">Key Metrics · 28-Day Rolling</div>
+  <div class="grid-5">
+    <div class="stat-card"><div class="stat-label">Followers</div><div class="stat-value">63,657</div><div class="stat-sub">Updated Apr 9</div></div>
+    <div class="stat-card"><div class="stat-label">Reach 28D</div><div class="stat-value">208,019</div><div class="stat-sub">Updated Apr 9</div></div>
+    <div class="stat-card"><div class="stat-label">Profile Visits 28D</div><div class="stat-value">18,560</div><div class="stat-sub">Updated Apr 9</div></div>
+    <div class="stat-card"><div class="stat-label">Accounts Engaged</div><div class="stat-value">—</div><div class="stat-sub">not available in dashboard</div></div>
+    <div class="stat-card"><div class="stat-label">Interactions 28D</div><div class="stat-value">8,739</div><div class="stat-sub">Updated Apr 9</div></div>
+  </div>
+
+  <!-- Benchmarks -->
+  <div class="section-label">Benchmarks vs Wedding Industry</div>
+  <div class="card" style="max-width:600px;">
+    <div class="benchmark-row">
+      <div class="bm-dot dot-good"></div>
+      <div class="bm-label">Engagement Rate</div>
+      <div class="bm-value">4.2%</div>
+      <div class="bm-bench">Industry avg: 1.5%</div>
+    </div>
+    <div class="benchmark-row">
+      <div class="bm-dot dot-warn"></div>
+      <div class="bm-label">Save Rate (saves / reach)</div>
+      <div class="bm-value">—</div>
+      <div class="bm-bench">Target: &gt;2%</div>
+    </div>
+    <div class="benchmark-row">
+      <div class="bm-dot dot-warn"></div>
+      <div class="bm-label">Share Rate</div>
+      <div class="bm-value">—</div>
+      <div class="bm-bench">Target: &gt;1%</div>
+    </div>
+    <div class="benchmark-row">
+      <div class="bm-dot dot-good"></div>
+      <div class="bm-label">Profile Visit Rate</div>
+      <div class="bm-value">8.9%</div>
+      <div class="bm-bench">Target: &gt;3%</div>
+    </div>
+    <div class="benchmark-row">
+      <div class="bm-dot dot-good"></div>
+      <div class="bm-label">Link in Bio Clicks</div>
+      <div class="bm-value">3,847</div>
+      <div class="bm-bench">ext. link taps · Apr 9</div>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-light);font-style:italic;">🟢 Above benchmark &nbsp;🟡 Near benchmark &nbsp;🔴 Below benchmark · Connect Instagram Insights for live data</div>
+  </div>
+
+  <!-- Road to 100K -->
+  <div class="section-label">Road to 100K</div>
+  <div class="goal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="goal-title" style="margin-bottom:0;">📸 @poppyflowersco → 100,000 followers</div>
+      <div style="font-size:13px;font-weight:600;color:var(--olive);">63.5%</div>
+    </div>
+    <div class="goal-bar-track" style="margin-bottom:14px;"><div class="goal-bar-fill" style="width:63.5%"></div></div>
+    <div class="goal-stats">
+      <div class="goal-stat"><div class="gl">Current</div><div class="gv">63,500</div></div>
+      <div class="goal-stat"><div class="gl">Remaining</div><div class="gv">36,500</div></div>
+      <div class="goal-stat"><div class="gl">Monthly Growth</div><div class="gv">— (Connect)</div></div>
+      <div class="goal-stat"><div class="gl">ETA</div><div class="gv">— months</div></div>
+    </div>
+  </div>
+
+  <!-- This month's content -->
+  <div class="section-label">Content This Month · April 2026</div>
+  <div style="margin-bottom:12px;font-size:12px;color:var(--text-light);">April posts only — ordered by save rate (the most important metric for a wedding florist).</div>
+
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">🌸</div>
+      <div class="post-info">
+        <div class="post-title">The 2026 Wedding Color Drop — what's coming in florals</div>
+        <div class="post-meta">📸 Instagram Reel · April 2026 · @poppyflowersco</div>
+      </div>
+      <div class="post-badge badge-top">⭐ Top of the month</div>
+    </div>
+    <div class="post-metrics">
+      <div class="pm-item"><div class="pm-label">Reach</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Saves</div><div class="pm-value highlight">—</div></div>
+      <div class="pm-item"><div class="pm-label">Shares</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Profile Visits</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Ext. Link Clicks</div><div class="pm-value">—</div></div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it worked</div>
+      <div class="post-why-text">Connect Instagram Insights to see real metrics and get automatic analysis. The system will evaluate: hook strength, format, duration, hashtags, posting time, and compare against the monthly average.</div>
+    </div>
+    <div class="post-comments">
+      <div class="comment-label">Recent Comments</div>
+      <div style="font-size:12px;color:var(--text-light);font-style:italic;">← Connect Instagram Insights to see live comments linked to each post</div>
+    </div>
+  </div>
+
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">💒</div>
+      <div class="post-info">
+        <div class="post-title">5 Wedding Trends Taking Over 2026</div>
+        <div class="post-meta">📸 Instagram Carousel · April 2026 · @poppyflowersco</div>
+      </div>
+      <div class="post-badge badge-good">✓ Good performance</div>
+    </div>
+    <div class="post-metrics">
+      <div class="pm-item"><div class="pm-label">Reach</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Saves</div><div class="pm-value highlight">—</div></div>
+      <div class="pm-item"><div class="pm-label">Shares</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Profile Visits</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Ext. Link Clicks</div><div class="pm-value">—</div></div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it worked (estimated)</div>
+      <div class="post-why-text">"Trends" carousels generate saves because brides bookmark them as wedding references. The list + trends format is one of the highest save-rate formats in the wedding niche on IG in 2026.</div>
+    </div>
+    <div class="post-comments">
+      <div class="comment-label">Recent Comments</div>
+      <div style="font-size:12px;color:var(--text-light);font-style:italic;">← Connect Instagram Insights for live data</div>
+    </div>
+  </div>
+
+  <!-- Why We Do This -->
+  <div class="section-label">Why We Do This · Comments That Matter</div>
+  <div class="why-card">
+    <h3>Why We Do This</h3>
+    <p>Comments that show Poppy is genuinely connecting with brides. Updated daily when Instagram Insights is connected.</p>
+    <div class="why-comment">
+      <div class="why-quote">"Exactly what I was looking for! Just booked with you for my October wedding 🌸"</div>
+      <div class="why-source">
+        <span class="why-platform-tag">Instagram</span>
+        <strong>@bride_example</strong> · Post: 2026 Color Drop
+      </div>
+    </div>
+    <div class="why-comment">
+      <div class="why-quote">"I had no idea you could get quality flowers with transparent pricing. This changes everything."</div>
+      <div class="why-source">
+        <span class="why-platform-tag">Instagram</span>
+        <strong>@wedding_planning_2026</strong> · Post: Pricing transparency
+      </div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:rgba(255,255,255,0.07);border-radius:8px;font-size:12px;color:#8a9280;">
+      💡 Connect Instagram Insights → the system will automatically capture the best comments from each post and display them here, categorized by type (praise / question / testimonial).
+    </div>
+  </div>
+
+  <!-- Mentions & Tags -->
+  <div class="section-label">Mentions &amp; Tags · This Week</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-light);font-style:italic;padding:10px 0;">
+      Connect Instagram Notifications to see in real time: who tagged @poppyflowersco, in which posts, in which Stories, and UGC (user-generated content) that Poppy can repost.
+    </div>
+  </div>
+
+  <!-- Linktree -->
+  <div class="section-label">Linktree · Bio Link Performance</div>
+  <div class="card">
+    <table class="lt-table">
+      <thead>
+        <tr>
+          <th>Button / Link</th>
+          <th>URL</th>
+          <th>Clicks (lifetime)</th>
+          <th>Trend</th>
+          <th>Suggestion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>🌸 What Poppy can do for you</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/wedding-flowers</td>
+          <td><strong>37.74K</strong></td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:100%"></div></div></td>
+          <td class="lt-suggestion">⭐ Top link — lifetime</td>
+        </tr>
+        <tr>
+          <td><strong>🧩 Start quiz &amp; connect with us</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">quiz.poppyflowers.com</td>
+          <td><strong>13.26K</strong></td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:35%"></div></div></td>
+          <td class="lt-suggestion">#2 — high intent traffic</td>
+        </tr>
+        <tr>
+          <td><strong>💐 Inspo for Your Big Day</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/real-weddings</td>
+          <td><strong>5.31K</strong></td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:14%"></div></div></td>
+          <td class="lt-suggestion">#3 — inspiration funnel</td>
+        </tr>
+        <tr>
+          <td><strong>📖 The Poppy Journal</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/the-poppy-journal</td>
+          <td>559</td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:1.5%"></div></div></td>
+          <td class="lt-suggestion">Low — consider repositioning</td>
+        </tr>
+        <tr>
+          <td><strong>⭐ Reviews</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/testimonials</td>
+          <td>449</td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:1.2%"></div></div></td>
+          <td class="lt-suggestion">Low — move up in order?</td>
+        </tr>
+        <tr>
+          <td><strong>🎁 FREE BOUQUET - PROMO</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/availability-near-me</td>
+          <td>—</td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:0%"></div></div></td>
+          <td class="lt-suggestion">New — monitor clicks</td>
+        </tr>
+        <tr>
+          <td><strong>📍 Poppy Florists In Your City</strong></td>
+          <td style="font-size:11px;color:var(--text-light);">/wedding-florist-near-me</td>
+          <td>—</td>
+          <td><div class="lt-bar"><div class="lt-bar-fill" style="width:0%"></div></div></td>
+          <td class="lt-suggestion">New — monitor clicks</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-light);font-style:italic;">Clicks = lifetime totals per link · Total 28D activity: <strong>3,780 views · 3,160 clicks · 84.2% CTR</strong> · Updated Apr 9</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: TIKTOK -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-tiktok">
+
+  <div class="section-label">Account · Current Stats</div>
+  <div class="grid-4">
+    <div class="stat-card"><div class="stat-label">Followers</div><div class="stat-value">2,637</div><div class="stat-sub">Updated Apr 9 (Mar data)</div></div>
+    <div class="stat-card"><div class="stat-label">Total Likes</div><div class="stat-value">51.4K</div><div class="stat-sub">cumulative</div></div>
+    <div class="stat-card"><div class="stat-label">Views This Month</div><div class="stat-value">56,330</div><div class="stat-sub">March · +105% vs Feb</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Views / Video</div><div class="stat-value">—</div><div class="stat-sub">this month vs last month</div></div>
+  </div>
+
+  <!-- Road to 5K -->
+  <div class="section-label">Road to 5K</div>
+  <div class="goal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="goal-title" style="margin-bottom:0;">🎵 @poppyflowersco → 5,000 followers</div>
+      <div style="font-size:13px;font-weight:600;color:var(--olive);">52.7%</div>
+    </div>
+    <div class="goal-bar-track" style="margin-bottom:14px;"><div class="goal-bar-fill" style="width:52.7%"></div></div>
+    <div class="goal-stats">
+      <div class="goal-stat"><div class="gl">Current</div><div class="gv">2,637</div></div>
+      <div class="goal-stat"><div class="gl">Remaining</div><div class="gv">2,363</div></div>
+      <div class="goal-stat"><div class="gl">Monthly Growth</div><div class="gv">+84 (Mar)</div></div>
+      <div class="goal-stat"><div class="gl">ETA</div><div class="gv">~28 mo</div></div>
+    </div>
+  </div>
+
+  <!-- Videos this month -->
+  <div class="section-label">Videos · April 2026 (This Month Only)</div>
+  <div style="margin-bottom:12px;font-size:12px;color:var(--text-light);">April videos only, ordered by views. The "Why" column explains what made them work — or not.</div>
+
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">💌</div>
+      <div class="post-info">
+        <div class="post-title">We all love Selena Gomez's bouquet — but how much does it cost?</div>
+        <div class="post-meta">🎵 TikTok · Pinned · @poppyflowersco</div>
+      </div>
+      <div class="post-badge badge-top">⭐ Top</div>
+    </div>
+    <div class="post-metrics">
+      <div class="pm-item"><div class="pm-label">Views</div><div class="pm-value highlight">63.4K</div></div>
+      <div class="pm-item"><div class="pm-label">Likes</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Comments</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Shares</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Saves</div><div class="pm-value">—</div></div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it worked</div>
+      <div class="post-why-text"><strong>Pop culture hook + transparent pricing</strong> = Poppy's winning formula. Mentioning Selena Gomez captures immediate attention (celebrity hook). The price question triggers curiosity. This format combines Poppy's two strongest content pillars: cultural references + pricing transparency. Pinning it was the right call.</div>
+    </div>
+    <div class="post-comments">
+      <div class="comment-label">Notable Comments</div>
+      <div class="comment-item">
+        <div class="comment-avatar">N</div>
+        <div class="comment-body">
+          <div class="comment-user">@bride_example <span class="comment-tag tag-price">💰 Pricing</span></div>
+          <div class="comment-text">How much would a full bouquet like hers actually cost? Can you recreate something similar?</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text-light);font-style:italic;margin-top:6px;">← Connect TikTok Analytics to see all live comments</div>
+    </div>
+  </div>
+
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">👰</div>
+      <div class="post-info">
+        <div class="post-title">We're not here to judge. Tell us your wedding drama.</div>
+        <div class="post-meta">🎵 TikTok · Recent · @poppyflowersco</div>
+      </div>
+      <div class="post-badge badge-low">↓ Underperformed</div>
+    </div>
+    <div class="post-metrics">
+      <div class="pm-item"><div class="pm-label">Views</div><div class="pm-value" style="color:var(--red-warn);">751</div></div>
+      <div class="pm-item"><div class="pm-label">Likes</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Comments</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Shares</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Saves</div><div class="pm-value">—</div></div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it didn't work</div>
+      <div class="post-why-text"><strong>The hook doesn't match Poppy's audience intent.</strong> Brides following @poppyflowersco are in inspiration/purchase mode, not entertainment mode. The video invites drama without delivering floral or wedding value. Result: TikTok likely didn't distribute it widely because early retention was low. <strong>Fix:</strong> Keep the relatable/humor tone but always anchor it in flowers or Poppy's process — e.g. "We're not here to judge your ex's corsage... but we are here to make yours iconic 🌸".</div>
+    </div>
+  </div>
+
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">🌿</div>
+      <div class="post-info">
+        <div class="post-title">The real story behind Poppy</div>
+        <div class="post-meta">🎵 TikTok · Recent · @poppyflowersco</div>
+      </div>
+      <div class="post-badge badge-low">↓ Underperformed</div>
+    </div>
+    <div class="post-metrics">
+      <div class="pm-item"><div class="pm-label">Views</div><div class="pm-value" style="color:var(--red-warn);">668</div></div>
+      <div class="pm-item"><div class="pm-label">Likes</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Comments</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Shares</div><div class="pm-value">—</div></div>
+      <div class="pm-item"><div class="pm-label">Saves</div><div class="pm-value">—</div></div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it didn't work</div>
+      <div class="post-why-text"><strong>Brand origin content requires an established audience.</strong> It works for accounts with 10K+ followers where a community already cares about the brand's story. With 2,646 followers, TikTok shows this to cold audiences who don't know Poppy yet. <strong>Fix:</strong> Reframe with a stronger hook that leads with bride benefit: <em>"The reason our prices are 40% lower than a traditional florist"</em> — tells the origin story but from the angle of what's in it for the bride.</div>
+    </div>
+  </div>
+
+  <!-- All-time reference -->
+  <div class="section-label">🏆 All-Time Top Videos — What Works (Reference)</div>
+  <div class="post-card">
+    <div class="post-header">
+      <div class="post-thumb">🌸</div>
+      <div class="post-info">
+        <div class="post-title">Color of the Year 2025 — Pantone Viva Magenta</div>
+        <div class="post-meta">🎵 TikTok · Poppy's most viral video · Historical</div>
+      </div>
+      <div class="post-badge badge-top">🚀 2.3M views</div>
+    </div>
+    <div class="post-why">
+      <div class="post-why-label">🧠 Why it went viral — lessons to replicate</div>
+      <div class="post-why-text"><strong>Cultural design trend + wedding flowers = viral.</strong> The Pantone Color of the Year is an annual cultural event that drives massive search volume. Poppy connected it to wedding florals — their niche. Lesson: <em>find annual cultural moments (award shows, design trends, pop culture events) and connect them to flowers.</em> Execute this in 2026 with "2026 Wedding Color Drop" or the 2026 Pantone color.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: PINTEREST -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-pinterest">
+
+  <div class="section-label">Account Stats · @poppyflowersco</div>
+  <div class="grid-4">
+    <div class="stat-card"><div class="stat-label">Followers</div><div class="stat-value">611</div><div class="stat-sub">Verified Merchant ✓</div></div>
+    <div class="stat-card"><div class="stat-label">Monthly Views</div><div class="stat-value">603.5K</div><div class="stat-sub">massive organic reach</div></div>
+    <div class="stat-card"><div class="stat-label">Outbound Clicks</div><div class="stat-value">—</div><div class="stat-sub">revisar en analytics.pinterest.com</div></div>
+    <div class="stat-card"><div class="stat-label">Pin Saves</div><div class="stat-value">—</div><div class="stat-sub">revisar en analytics.pinterest.com</div></div>
+  </div>
+
+  <div class="insight-box" style="margin-top:16px;">
+    <h4>🔑 Key insight: Pinterest is the bride's search engine</h4>
+    <p>Pinterest isn't a social network — it's a visual search engine. Brides search "wedding bouquet 2026", "spring wedding flowers", "romantic bridal florals" and find Poppy's pins without following the account. That's why 603.5K views with only 611 followers. The opportunity: optimize every pin with wedding search keywords.</p>
+  </div>
+
+  <!-- What brides are searching -->
+  <div class="section-label">🔍 What Brides Are Searching on Pinterest Right Now</div>
+  <div class="card">
+    <div class="trend-item">
+      <div class="trend-num">#1</div>
+      <div class="trend-emoji">💐</div>
+      <div class="trend-body">
+        <div class="trend-title">wedding bouquet 2026 trends</div>
+        <div class="trend-desc">Brides getting married in 2026–2027 are planning now. High purchase intent.</div>
+        <div class="trend-action">→ Create pin: "The 5 bouquet styles taking over 2026" using Poppy's real wedding photos</div>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">#2</div>
+      <div class="trend-emoji">🌿</div>
+      <div class="trend-body">
+        <div class="trend-title">garden wedding florals aesthetic</div>
+        <div class="trend-desc">Romantic garden weddings remain trending. Brides searching for full floral decoration inspiration.</div>
+        <div class="trend-action">→ Create pin: Gallery of a garden wedding Poppy did, with every flower type named</div>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">#3</div>
+      <div class="trend-emoji">🤍</div>
+      <div class="trend-body">
+        <div class="trend-title">minimalist bridal bouquet white</div>
+        <div class="trend-desc">"Quiet luxury" wedding trend. Simple, monochromatic, high-impact bouquets.</div>
+        <div class="trend-action">→ Create pin featuring Poppy's white minimalist bouquets + price range</div>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">#4</div>
+      <div class="trend-emoji">💰</div>
+      <div class="trend-body">
+        <div class="trend-title">wedding flowers budget breakdown</div>
+        <div class="trend-desc">Brides trying to understand what to budget for florals. Very high booking intent.</div>
+        <div class="trend-action">→ Create infographic pin: "How much do wedding flowers cost for 100 guests" — perfect for Poppy's pricing transparency pillar</div>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-num">#5</div>
+      <div class="trend-emoji">🍂</div>
+      <div class="trend-body">
+        <div class="trend-title">fall wedding flowers 2026</div>
+        <div class="trend-desc">Fall 2026 weddings are being planned now. Seasonal flowers: dahlias, roses, amaranthus.</div>
+        <div class="trend-action">→ Create pin: "Perfect flowers for a fall 2026 wedding" with a full color palette</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: PAID ADS — AD INTELLIGENCE HUB -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-ads">
+
+  <!-- OVERVIEW SNAPSHOT -->
+  <div class="ai-section-label">01 · Overview Snapshot</div>
+  <div class="ai-stat-strip">
+    <div class="ai-stat-mini hi">
+      <div class="sl">Top CVR</div><div class="sv">5.05%</div><div class="ss">Price-Value Video</div>
+    </div>
+    <div class="ai-stat-mini hi">
+      <div class="sl">Ads at Scale</div><div class="sv">5</div><div class="ss">&gt;3% CVR</div>
+    </div>
+    <div class="ai-stat-mini">
+      <div class="sl">Concepts</div><div class="sv">9</div><div class="ss">3 personas × 3 angles</div>
+    </div>
+    <div class="ai-stat-mini">
+      <div class="sl">Total Hooks</div><div class="sv">27</div><div class="ss">VO + Text + Caption</div>
+    </div>
+    <div class="ai-stat-mini hi2">
+      <div class="sl">A/B Queue</div><div class="sv">8</div><div class="ss">Tests ready to run</div>
+    </div>
+    <div class="ai-stat-mini">
+      <div class="sl">CVR Decision</div>
+      <div style="font-size:11px;line-height:1.7;margin-top:4px;font-weight:700;">
+        <span style="color:#4a7c59;">&gt;3% Scale</span><br/>
+        <span style="color:var(--amber);">2–3% Iterate</span><br/>
+        <span style="color:var(--red-warn);">&lt;2% Pause</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE A/B TEST -->
+  <div class="ai-section-label">02 · Active Split Test · Meta Ads</div>
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:600;color:var(--text-dark);">📘 Active A/B Test</div>
+      <div style="font-size:11px;color:var(--text-light);">Connect Meta Ads Manager for live data</div>
+    </div>
+    <table class="ab-table">
+      <thead>
+        <tr>
+          <th>Creative</th><th>Hook Type</th><th>Territory</th><th>CTR</th><th>CPL</th><th>Leads</th><th>CVR</th><th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="winner-row">
+          <td>Price-Value Showcase - Video <span class="ab-winner-badge">🏆 Winner</span></td>
+          <td>Contrast</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td style="color:var(--green-good);font-weight:700;">5.11%</td><td>$848</td><td>—</td><td>5.05%</td>
+          <td style="color:var(--green-good);font-weight:700;">SCALE ↑</td>
+        </tr>
+        <tr>
+          <td>POV - Video - May</td>
+          <td>Aspirational</td>
+          <td><span class="ai-t-badge ai-t2-b">T2</span></td>
+          <td>3.48%</td><td>$2,635</td><td>—</td><td>3.87%</td>
+          <td style="color:var(--green-good);">SCALE</td>
+        </tr>
+        <tr>
+          <td>Price Range - Carousel - May</td>
+          <td>Price-focused</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td>2.16%</td><td>$6,878</td><td>—</td><td>—</td>
+          <td style="color:var(--amber);">ITERATE</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:14px;padding:12px;background:var(--cream);border-radius:8px;font-size:11px;color:var(--text-light);">
+      📊 Datos en vivo desde <code>poppy_facebook_ads.ads_insights</code> · Data Warehouse conectado · Actualizado Apr 9 · <strong style="color:var(--green-good);">✅ Live</strong>
+    </div>
+  </div>
+
+  <!-- FORMAT BREAKDOWN -->
+  <div class="ai-section-label">03 · Format Breakdown</div>
+  <div class="grid-2">
+    <div class="ai-chart-card">
+      <h3>Recommended Format Mix</h3>
+      <div class="ai-donut-layout">
+        <div class="ai-donut-wrap">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <ul class="ai-legend">
+          <li><span class="ai-legend-dot" style="background:#4a7c59;"></span><span class="ai-legend-pct">56%</span>&nbsp;<span class="ai-legend-lbl">Video (VO + Reveal)</span></li>
+          <li><span class="ai-legend-dot" style="background:#3a5490;"></span><span class="ai-legend-pct">28%</span>&nbsp;<span class="ai-legend-lbl">Carousel</span></li>
+          <li><span class="ai-legend-dot" style="background:var(--blush-dark);"></span><span class="ai-legend-pct">16%</span>&nbsp;<span class="ai-legend-lbl">Static / Quote Card</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="ai-chart-card">
+      <h3>How Each Format Works — No Bride on Camera</h3>
+      <div class="ai-format-card" style="border-left-color:#4a7c59;">
+        <div class="ai-format-title">VO Hook</div>
+        <div class="ai-format-desc">Actor reads exact bride quote as VO over real wedding footage. Verbatim — never edited. Authenticity comes from the language, not the face.</div>
+        <div class="ai-format-example">"I had basically given up on having the flowers I wanted. Until I found Poppy."</div>
+      </div>
+      <div class="ai-format-card" style="border-left-color:#3a5490;">
+        <div class="ai-format-title">Text Overlay</div>
+        <div class="ai-format-desc">Animated text (typewriter / fade) over Poppy wedding video. Works as Story or Feed. No actor needed.</div>
+        <div class="ai-format-example">"She was nervous the whole time. Then she walked into the venue."</div>
+      </div>
+      <div class="ai-format-card" style="border-left-color:var(--blush-dark);">
+        <div class="ai-format-title">Quote Card (Static)</div>
+        <div class="ai-format-desc">Verbatim review + bride first name + star rating + photo of her actual arrangement. 10 ready to use.</div>
+        <div class="ai-format-example">"Finding Poppy was literally a miracle." — Kaitlynn ⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERRITORIES -->
+  <div class="ai-section-label">04 · Core Messaging Strategies — 4 Territories</div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="ai-chart-card">
+      <h3>Concepts per Territory</h3>
+      <div class="ai-chart-wrap"><canvas id="terrChart"></canvas></div>
+    </div>
+    <div class="ai-chart-card">
+      <h3>CVR Performance by Territory</h3>
+      <div class="ai-chart-wrap"><canvas id="cvrChart"></canvas></div>
+    </div>
+  </div>
+  <div class="ai-territory-grid">
+    <div class="ai-territory-card t1">
+      <div class="ai-t-code">T1 · Budget Transparency</div>
+      <div class="ai-t-name">The insider who tells you what florists don't</div>
+      <div class="ai-t-cvr">5.05% CVR ↑</div>
+      <div class="ai-t-status" style="color:#4a7c59;">✅ Scale · Highest-performing territory</div>
+      <div style="font-size:11px;color:var(--text-light);">3 concepts ready · El Muro del Minimum · Transparent Pricing · Literally a Miracle</div>
+      <div class="ai-t-hook">"Here's what $3,200 gets you. Not clickbait."</div>
+    </div>
+    <div class="ai-territory-card t2">
+      <div class="ai-t-code">T2 · Luxury Inspiration</div>
+      <div class="ai-t-name">The Vogue look without the Vogue budget</div>
+      <div class="ai-t-cvr">3.87% CVR →</div>
+      <div class="ai-t-status" style="color:var(--amber);">✅ Scale · POV format works best</div>
+      <div style="font-size:11px;color:var(--text-light);">1 concept ready · Better Than the Inspo Photos</div>
+      <div class="ai-t-hook">"She sent us her Pinterest. Here's what arrived."</div>
+    </div>
+    <div class="ai-territory-card t3">
+      <div class="ai-t-code">T3 · Social Proof</div>
+      <div class="ai-t-name">Real brides, real emotion, verbatim words</div>
+      <div class="ai-t-cvr">3.70–4.00% CVR</div>
+      <div class="ai-t-status" style="color:#3a5490;">✅ Scale · Testimonial + Customer Story</div>
+      <div style="font-size:11px;color:var(--text-light);">5 concepts · El Freak Out · El Reveal · One Less Thing · They Just Appeared · Easiest Vendor</div>
+      <div class="ai-t-hook">"About a week before the wedding I started to freak out…"</div>
+    </div>
+    <div class="ai-territory-card t4">
+      <div class="ai-t-code">T4 · Collections / FOMO Drop</div>
+      <div class="ai-t-name">Fashion-forward "new drop" energy</div>
+      <div class="ai-t-cvr">— Testing</div>
+      <div class="ai-t-status" style="color:#9a9a9a;">🔜 Exploration · Not yet launched</div>
+      <div style="font-size:11px;color:var(--text-light);">Inspired by Zara/fashion drops. New collection = anticipation + FOMO. Always clarify customizable.</div>
+      <div class="ai-t-hook">"New drop: our Fall 2026 Collection is here."</div>
+    </div>
+  </div>
+
+  <!-- HOOK STRATEGIES -->
+  <div class="ai-section-label">05 · Creative Hook Strategies — Motion Framework</div>
+  <div class="grid-2">
+    <div class="ai-chart-card">
+      <h3>Hook Type Distribution (9 concepts)</h3>
+      <div style="margin-top:6px;">
+        <div class="ai-hook-bar-row">
+          <div class="ai-hook-bar-label">Relatability</div>
+          <div class="ai-hook-bar-track"><div class="ai-hook-bar-fill" style="width:100%;background:#4a7c59;"></div></div>
+          <div class="ai-hook-bar-count">9</div>
+        </div>
+        <div class="ai-hook-bar-row">
+          <div class="ai-hook-bar-label">Contrast</div>
+          <div class="ai-hook-bar-track"><div class="ai-hook-bar-fill" style="width:78%;background:#3a5490;"></div></div>
+          <div class="ai-hook-bar-count">7</div>
+        </div>
+        <div class="ai-hook-bar-row">
+          <div class="ai-hook-bar-label">Curiosity</div>
+          <div class="ai-hook-bar-track"><div class="ai-hook-bar-fill" style="width:67%;background:var(--blush-dark);"></div></div>
+          <div class="ai-hook-bar-count">6</div>
+        </div>
+        <div class="ai-hook-bar-row">
+          <div class="ai-hook-bar-label">Confession</div>
+          <div class="ai-hook-bar-track"><div class="ai-hook-bar-fill" style="width:44%;background:#7a5c8a;"></div></div>
+          <div class="ai-hook-bar-count">4</div>
+        </div>
+        <div class="ai-hook-bar-row">
+          <div class="ai-hook-bar-label">Bold Claim</div>
+          <div class="ai-hook-bar-track"><div class="ai-hook-bar-fill" style="width:33%;background:var(--amber);"></div></div>
+          <div class="ai-hook-bar-count">3</div>
+        </div>
+      </div>
+      <div class="insight-box" style="margin-top:14px;">
+        <h4>🎯 Contrast dominates</h4>
+        <p>The "expected $10K, paid $3,200" frame appears in 7 of 9 concepts. All 5 Motion hook types are represented. Relatability is the backbone — VOC language is inherently relatable.</p>
+      </div>
+    </div>
+    <div class="ai-chart-card">
+      <h3>Hook Anatomy — 3 Layers</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+        <div style="background:var(--cream);border-radius:8px;padding:14px;border-left:3px solid #4a7c59;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#4a7c59;margin-bottom:4px;">Visual Action</div>
+          <div style="font-size:12px;color:var(--text-mid);">Show the problem before a word is said. Opening shot = frustration, blank venue, inspo photo on phone.</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:14px;border-left:3px solid #3a5490;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3a5490;margin-bottom:4px;">Voice Over / Audio</div>
+          <div style="font-size:12px;color:var(--text-mid);">Must sound human — actor reads verbatim bride quote. Product enters at ~20 seconds as solution, never protagonist.</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:14px;border-left:3px solid var(--blush-dark);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blush-dark);margin-bottom:4px;">Header Caption</div>
+          <div style="font-size:12px;color:var(--text-mid);">Does NOT repeat the audio — it complements and adds intrigue. Stops scroll before the visual lands. Test independently against same visual.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TARGET PERSONAS -->
+  <div class="ai-section-label">06 · Target Bride Personas — VOC-Validated</div>
+  <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">Based on 40+ real reviews from #wedding_customer_feedback (Slack). Ranked by pain intensity and conversion opportunity.</div>
+  <div class="ai-persona-grid">
+    <div class="ai-persona-card p1">
+      <div class="ai-persona-rank">🥇 Primary — Highest CVR Opportunity</div>
+      <div class="ai-persona-name">The Priced-Out Bride</div>
+      <div class="ai-persona-territory">Territory: T1 Budget Transparency</div>
+      <div class="ai-persona-desc">Has been calling florists for weeks. Every quote ends the same: a minimum she can't meet or opaque pricing after an emotional consultation. Feels excluded from the luxury flower world.</div>
+      <div class="ai-persona-arc">Arc: <span>Frustrated → Excluded → Relieved → Delighted</span></div>
+      <div class="ai-persona-quote">"I couldn't find any local florists who didn't require a high minimum. Finding Poppy was literally a miracle." — Kaitlynn ⭐⭐⭐⭐⭐</div>
+      <div class="ai-persona-tags">
+        <span class="ai-persona-tag">Pain: opaque pricing</span>
+        <span class="ai-persona-tag">Pain: high minimums</span>
+        <span class="ai-persona-tag">Best: Video VO</span>
+        <span class="ai-persona-tag">3 concepts ready</span>
+      </div>
+    </div>
+    <div class="ai-persona-card p2">
+      <div class="ai-persona-rank">🥈 Secondary — Highest Emotional Intensity</div>
+      <div class="ai-persona-name">The Nervous Vision-Holder</div>
+      <div class="ai-persona-territory">Territory: T2 Luxury + T3 Social Proof</div>
+      <div class="ai-persona-desc">Full Pinterest board. Knows exactly what she wants. Fear isn't price — it's execution. Can't see flowers before the day = escalating anxiety peaking the week before the wedding.</div>
+      <div class="ai-persona-arc">Arc: <span>Anxious → Nervous → Blown Away → Crying with Joy</span></div>
+      <div class="ai-persona-quote">"About a week before the wedding I started to freak out. When I walked in I started to cry — it was beyond perfect." — Margie ⭐⭐⭐⭐⭐</div>
+      <div class="ai-persona-tags">
+        <span class="ai-persona-tag">Pain: no preview</span>
+        <span class="ai-persona-tag">Pain: fear of mismatch</span>
+        <span class="ai-persona-tag">Best: Reveal Video</span>
+        <span class="ai-persona-tag">3 concepts ready</span>
+      </div>
+    </div>
+    <div class="ai-persona-card p3">
+      <div class="ai-persona-rank">🥉 Tertiary — Highest Volume / Broadest Reach</div>
+      <div class="ai-persona-name">The Overwhelmed Planner</div>
+      <div class="ai-persona-territory">Territory: T3 Social Proof</div>
+      <div class="ai-persona-desc">Coordinating 50 vendors at once. Doesn't need more complexity — needs one vendor who handles everything without drama. The online model becomes the exact solution she needed.</div>
+      <div class="ai-persona-arc">Arc: <span>Overwhelmed → Skeptical → Relieved → Grateful</span></div>
+      <div class="ai-persona-quote">"With so much wedding planning on my plate, the last thing I needed was another meeting. Poppy handled everything." — Katelyn ⭐⭐⭐⭐⭐</div>
+      <div class="ai-persona-tags">
+        <span class="ai-persona-tag">Pain: vendor overload</span>
+        <span class="ai-persona-tag">Pain: too many calls</span>
+        <span class="ai-persona-tag">Best: POV Video</span>
+        <span class="ai-persona-tag">3 concepts ready</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD CONCEPT LIBRARY -->
+  <div class="ai-section-label">07 · Ad Concept Library — Performance &amp; Status</div>
+  <div style="overflow-x:auto;background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;">
+    <table class="ai-ads-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Concept</th><th>Persona</th><th>Territory</th><th>Format</th><th>CVR</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="ai-rank top">01</div></td>
+          <td><div class="ai-concept-name">Price-Value Showcase</div><div class="ai-concept-hook">"This wedding cost $3,500. Here's what's included."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Priced-Out Bride</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td><span class="ai-format-badge">Video</span></td>
+          <td><div class="ai-cvr-val">5.05%</div></td>
+          <td><span class="ai-cvr-pill ai-pill-scale">SCALE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank top">02</div></td>
+          <td><div class="ai-concept-name">Customer Story Experience</div><div class="ai-concept-hook">"I thought I was going to spend $8,000. I spent $3,500."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Priced-Out Bride</td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td><span class="ai-format-badge">Video</span></td>
+          <td><div class="ai-cvr-val">4.00%</div></td>
+          <td><span class="ai-cvr-pill ai-pill-scale">SCALE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank top">03</div></td>
+          <td><div class="ai-concept-name">POV Video</div><div class="ai-concept-hook">"POV: you want luxury flowers. You don't want what traditional florists charge."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Nervous Vision-Holder</td>
+          <td><span class="ai-t-badge ai-t2-b">T2</span></td>
+          <td><span class="ai-format-badge">Video</span></td>
+          <td><div class="ai-cvr-val">3.87%</div></td>
+          <td><span class="ai-cvr-pill ai-pill-scale">SCALE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank top">04</div></td>
+          <td><div class="ai-concept-name">Kelly Testimonial</div><div class="ai-concept-hook">"She wasn't trying to sell me anything. She genuinely wanted to help."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Nervous Vision-Holder</td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td><span class="ai-format-badge">Video</span></td>
+          <td><div class="ai-cvr-val">3.70%</div></td>
+          <td><span class="ai-cvr-pill ai-pill-scale">SCALE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank top">05</div></td>
+          <td><div class="ai-concept-name">Product Pricing Video</div><div class="ai-concept-hook">"What you pay includes: bouquet, 8 centerpieces, ceremony arch."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Priced-Out Bride</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td><span class="ai-format-badge">Video</span></td>
+          <td><div class="ai-cvr-val">3.09%</div></td>
+          <td><span class="ai-cvr-pill ai-pill-scale">SCALE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank">06</div></td>
+          <td><div class="ai-concept-name">El Muro del Minimum (VOC)</div><div class="ai-concept-hook">"I called florist after florist. Every single one had a minimum I couldn't afford."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Priced-Out Bride</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td><span class="ai-format-badge">Video VO</span></td>
+          <td><div class="ai-cvr-new">—</div></td>
+          <td><span class="ai-cvr-pill ai-pill-queue">QUEUE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank">07</div></td>
+          <td><div class="ai-concept-name">El Freak Out (VOC)</div><div class="ai-concept-hook">"About a week before my wedding, I started to freak out."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Nervous Vision-Holder</td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td><span class="ai-format-badge">Video VO</span></td>
+          <td><div class="ai-cvr-new">—</div></td>
+          <td><span class="ai-cvr-pill ai-pill-queue">QUEUE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank">08</div></td>
+          <td><div class="ai-concept-name">El Reveal (VOC)</div><div class="ai-concept-hook">"When I walked into the venue and saw the tables, I started to cry."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Nervous Vision-Holder</td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td><span class="ai-format-badge">Video VO</span></td>
+          <td><div class="ai-cvr-new">—</div></td>
+          <td><span class="ai-cvr-pill ai-pill-queue">QUEUE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank">09</div></td>
+          <td><div class="ai-concept-name">One Less Thing (VOC)</div><div class="ai-concept-hook">"The last thing I needed was another meeting. Poppy handled everything."</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Overwhelmed Planner</td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td><span class="ai-format-badge">Video VO</span></td>
+          <td><div class="ai-cvr-new">—</div></td>
+          <td><span class="ai-cvr-pill ai-pill-queue">QUEUE</span></td>
+        </tr>
+        <tr>
+          <td><div class="ai-rank">10</div></td>
+          <td><div class="ai-concept-name">Literally a Miracle (Quote Card)</div><div class="ai-concept-hook">"Finding Poppy was literally a miracle." — Kaitlynn ⭐⭐⭐⭐⭐</div></td>
+          <td style="font-size:11px;color:var(--text-light);">Priced-Out Bride</td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td><span class="ai-format-badge">Static</span></td>
+          <td><div class="ai-cvr-new">—</div></td>
+          <td><span class="ai-cvr-pill ai-pill-queue">QUEUE</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:10px;font-size:11px;color:var(--text-light);font-style:italic;">⚠️ Trend aesthetic videos (no pricing) and pure inspiration content consistently &lt;2% CVR — do not scale without a price-clarity hook.</div>
+
+  <!-- T×P CONCEPT MATRIX -->
+  <div class="ai-section-label" style="margin-top:28px;">07b · Territory × Persona Matrix — 9 Concepts Ready</div>
+  <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">Cada concepto cruza un territorio con una persona creativa. 3 variaciones de hook por concepto = 27 hooks listos para testear.</div>
+  <div style="overflow-x:auto;background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;margin-bottom:8px;">
+    <table class="ai-ads-table">
+      <thead>
+        <tr>
+          <th>Concepto</th><th>Territorio</th><th>Persona Creativa</th><th>Hook Principal</th><th>Variaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="ai-concept-name">Nobody tells you</div></td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Modern Bride</td>
+          <td style="font-size:11px;">"Nobody tells you what wedding flowers actually cost. I will."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr>
+          <td><div class="ai-concept-name">How much do you think</div></td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Romantic Bride</td>
+          <td style="font-size:11px;">"How much do you think this wedding cost? Less than you think."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr>
+          <td><div class="ai-concept-name">The Vogue look</div></td>
+          <td><span class="ai-t-badge ai-t1-b">T1</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Editorial Bride</td>
+          <td style="font-size:11px;">"The Vogue look for $5,500. Not clickbait."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr style="background:#f9f7f4;">
+          <td><div class="ai-concept-name">POV Luxury</div></td>
+          <td><span class="ai-t-badge ai-t2-b">T2</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Modern Bride</td>
+          <td style="font-size:11px;">"POV: you want luxury flowers. You don't want to pay what traditional florists charge."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr style="background:#f9f7f4;">
+          <td><div class="ai-concept-name">You thought it cost</div></td>
+          <td><span class="ai-t-badge ai-t2-b">T2</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Romantic Bride</td>
+          <td style="font-size:11px;">"You thought this wedding cost $12,000. It cost $3,200."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr style="background:#f9f7f4;">
+          <td><div class="ai-concept-name">NY florist truth</div></td>
+          <td><span class="ai-t-badge ai-t2-b">T2</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Editorial Bride</td>
+          <td style="font-size:11px;">"My friends thought I hired a florist from New York. I told them the truth."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr>
+          <td><div class="ai-concept-name">I spent $3,500</div></td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Modern Bride</td>
+          <td style="font-size:11px;">"I thought I was going to spend $8,000 on flowers. I spent $3,500."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr>
+          <td><div class="ai-concept-name">Florist quoted $11K</div></td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Romantic Bride</td>
+          <td style="font-size:11px;">"My florist quoted me $11,000. Poppy did the same thing for $3,200."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+        <tr>
+          <td><div class="ai-concept-name">Vogue sin budget Vogue</div></td>
+          <td><span class="ai-t-badge ai-t3-b">T3</span></td>
+          <td style="font-size:11px;color:var(--text-light);">Editorial Bride</td>
+          <td style="font-size:11px;">"I wanted the wedding I saw in Vogue. I didn't have a Vogue budget."</td>
+          <td style="font-size:10px;color:var(--text-light);">Aspirational · Price-focused · Lore narrative</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-light);font-style:italic;">💡 Cada concepto tiene 3 variaciones de hook (aspirational / price-focused / lore narrative). 9 conceptos × 3 variaciones = 27 hooks listos para A/B test.</div>
+
+  <!-- TESTING FRAMEWORK -->
+  <div class="ai-section-label" style="margin-top:28px;">07c · Testing Framework — 6 Tests Activos</div>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:14px;">🧪 Tests en Curso — Prioridad 2026</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid #4a7c59;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#4a7c59;margin-bottom:4px;">Test 1 · Message vs. Message</div>
+          <div style="font-size:12px;color:var(--text-mid);">Mismo visual, copy diferente. Aspiración vs. precio.</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">Variante A: "You wanted the Vogue look…" · Variante B: "$3,000 can look like this"</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid #3a5490;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3a5490;margin-bottom:4px;">Test 2 · Format Test</div>
+          <div style="font-size:12px;color:var(--text-mid);">Mismo mensaje, formato diferente.</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">Video VO vs. Carousel vs. Static Quote Card</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid var(--blush-dark);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blush-dark);margin-bottom:4px;">Test 3 · Style Targeting</div>
+          <div style="font-size:12px;color:var(--text-mid);">¿Qué persona creativa convierte mejor por presupuesto?</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">$3K Romantic vs. $3K Modern vs. $3K Editorial</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:14px;">🧪 Tests en Cola — A Lanzar</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid var(--amber);">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin-bottom:4px;">Test 4 · Lore vs. Direct</div>
+          <div style="font-size:12px;color:var(--text-mid);">¿Contraste directo o historia que construye?</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">"This wedding cost $3,500" vs. "Brides kept asking how this only cost $3,500"</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid #7a5c8a;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#7a5c8a;margin-bottom:4px;">Test 5 · Transparency Depth</div>
+          <div style="font-size:12px;color:var(--text-mid);">¿Solo precio o precio + breakdown completo?</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">Budget solo vs. Budget + "What you pay includes: bouquet, 8 centerpieces, arch"</div>
+        </div>
+        <div style="background:var(--cream);border-radius:8px;padding:12px;border-left:3px solid #6b7560;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6b7560;margin-bottom:4px;">Test 6 · Carousel Structure</div>
+          <div style="font-size:12px;color:var(--text-mid);">¿Qué organiza mejor el valor en carousel?</div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:3px;">Budget tiers ($2K/$3K/$5K) vs. Style comparison (Modern/Romantic/Editorial)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="background:var(--olive-dark);border-radius:10px;padding:14px 20px;font-size:11px;color:#a0a88e;display:flex;gap:24px;flex-wrap:wrap;align-items:center;">
+    <span style="color:var(--warm-white);font-weight:600;font-size:12px;">Regla de decisión:</span>
+    <span><span style="color:#7cb87c;font-weight:700;">&gt;3% CVR</span> → Scale</span>
+    <span><span style="color:var(--amber);font-weight:700;">2–3% CVR</span> → Iterate</span>
+    <span><span style="color:#c97070;font-weight:700;">&lt;2% CVR</span> → Pause</span>
+    <span style="color:#8a9280;">Métrica base: CVR by Reach (no por impresiones)</span>
+  </div>
+
+  <!-- 4 CREATIVE BRIDE PERSONAS -->
+  <div class="ai-section-label" style="margin-top:28px;">07d · 4 Bride Creative Personas — Estilos de Boda</div>
+  <div style="font-size:12px;color:var(--text-light);margin-bottom:14px;">Cada territorio puede cruzarse con cada persona = múltiples variaciones base. Distinct de las 3 buyer personas VOC — estas son estéticas de boda.</div>
+  <div class="grid-4" style="margin-bottom:8px;">
+    <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:18px;border-top:3px solid #6b7560;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6b7560;margin-bottom:8px;">Modern Bride</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;">Sculptural · Minimal · Unexpected</div>
+      <div style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;">Anthuriums, tropicals, neutral palettes. No quiere lo que todas tienen. Quiere que sus flores sean la arquitectura del espacio.</div>
+      <div style="font-size:10px;color:var(--text-light);">Florals: anthuriums · neutrals · sculptural stems</div>
+      <div style="margin-top:8px;font-size:10px;font-style:italic;color:#6b7560;">"POV: you want luxury flowers. You don't want what traditional florists charge."</div>
+    </div>
+    <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:18px;border-top:3px solid var(--blush-dark);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--blush-dark);margin-bottom:8px;">Romantic Bride</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;">Garden Style · Soft · Dreamy</div>
+      <div style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;">Roses, garden flowers, pastel palettes. La boda de sus sueños de Pinterest. Quiere abundancia floral que se sienta personal, no de salón de eventos.</div>
+      <div style="font-size:10px;color:var(--text-light);">Florals: garden roses · ranunculus · pastels</div>
+      <div style="margin-top:8px;font-size:10px;font-style:italic;color:var(--blush-dark);">"You thought this wedding cost $12,000. It cost $3,200."</div>
+    </div>
+    <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:18px;border-top:3px solid #3a5490;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#3a5490;margin-bottom:8px;">Editorial Bride</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;">Dramatic · Bold · Vogue-Level</div>
+      <div style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;">Dramatic installs, bold colors, unexpected pairings. Quiere que sus fotos de boda se vean como una editorial. El flower wall que para el scroll.</div>
+      <div style="font-size:10px;color:var(--text-light);">Florals: bold palettes · installs · graphic stems</div>
+      <div style="margin-top:8px;font-size:10px;font-style:italic;color:#3a5490;">"The Vogue look for $5,500. Not clickbait."</div>
+    </div>
+    <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:12px;padding:18px;border-top:3px solid #9a9a9a;opacity:0.8;">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#9a9a9a;margin-bottom:8px;">Traditional Bride <span style="font-size:9px;background:#f0f0f0;color:#9a9a9a;border-radius:4px;padding:1px 6px;margin-left:4px;">En desarrollo</span></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:8px;">Classic · Elegant · Timeless</div>
+      <div style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;">White roses, greenery, symmetry. Quiere lo que reconoce como "boda". Para ella, Poppy = misma estética tradicional, sin el costo de floristería tradicional.</div>
+      <div style="font-size:10px;color:var(--text-light);">Florals: white roses · greenery · classic peonies</div>
+      <div style="margin-top:8px;font-size:10px;font-style:italic;color:#9a9a9a;">Hook en desarrollo — persona nueva 2026</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text-light);font-style:italic;margin-bottom:4px;">💡 Seasonality angle: hablarle a la bride según su temporada. "If you're getting married this fall, here's the palette I'd choose." Conecta con el momento concreto de planning.</div>
+
+  <!-- AD COMMENTS -->
+  <div class="ai-section-label">08 · Comments on Active Ads</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:10px;">What are brides saying in the ad comments? (Social proof opportunity)</div>
+    <div style="font-size:12px;color:var(--text-light);font-style:italic;">Connect Meta Ads Manager → the system will capture and classify comments automatically. Positive comments improve CTR up to 2x. Unanswered pricing questions in ad comments need fast responses.</div>
+    <div class="insight-box" style="margin-top:14px;">
+      <h4>🎯 Why ad comments matter for Poppy</h4>
+      <p>Answering a pricing question directly in an ad comment — "Hi! A full package starts at $X, full breakdown at the link 🌸" — converts better than the ad copy itself. An ad with 10 positive comments can double conversion rate.</p>
+    </div>
+  </div>
+
+  <!-- GOOGLE ADS -->
+  <div class="ai-section-label">09 · Google Ads · Sin datos recientes</div>
+  <div style="background:var(--warm-white);border:1px solid var(--card-border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+    <span style="font-size:20px;">⚠️</span>
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);">Google Ads dejó de sincronizar al warehouse en abril 2022</div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:3px;">Pedirle a Michael que reconecte la integración de Google Ads al data warehouse para tener datos actualizados aquí.</div>
+    </div>
+  </div>
+
+  <div class="ai-section-label">10 · Lead Sources · CVR por Canal (últimos 30 días)</div>
+  <div class="grid-4">
+    <div class="stat-card"><div class="stat-label">Google</div><div class="stat-value" style="color:var(--green-good);">23.1%</div><div class="stat-sub">13 leads · 3 bookings 🔥</div></div>
+    <div class="stat-card"><div class="stat-label">Pro Planner</div><div class="stat-value" style="color:var(--green-good);">16.7%</div><div class="stat-sub">36 leads · 6 bookings</div></div>
+    <div class="stat-card"><div class="stat-label">Wedgewood</div><div class="stat-value" style="color:var(--green-good);">7.0%</div><div class="stat-sub">57 leads · 4 bookings</div></div>
+    <div class="stat-card"><div class="stat-label">Organic</div><div class="stat-value">3.2%</div><div class="stat-sub">1,170 leads · 37 bookings</div></div>
+    <div class="stat-card"><div class="stat-label">Atium</div><div class="stat-value" style="color:var(--amber);">2.3%</div><div class="stat-sub">2,488 leads · 58 bookings</div></div>
+    <div class="stat-card"><div class="stat-label">Facebook Ads</div><div class="stat-value" style="color:var(--red-warn);">1.0%</div><div class="stat-sub">1,373 leads · 14 bookings ⚠️</div></div>
+    <div class="stat-card"><div class="stat-label">Meta CPL</div><div class="stat-value" style="color:var(--green-good);">~$4</div><div class="stat-sub">spend $5,761 · abr</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Deal Value</div><div class="stat-value">$3,205</div><div class="stat-sub">113 bookings · $356K rev</div></div>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:var(--text-light);font-style:italic;">📊 Datos en vivo desde analytics.vw_wedding_facts · Actualizado Apr 14</div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: INTELLIGENCE -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-intel">
+
+  <!-- Pillar breakdown -->
+  <div class="section-label">Content Pillar Distribution · April 2026</div>
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:16px;">How much are we publishing of each pillar?</div>
+      <div class="pillar-bars">
+        <div class="pillar-row"><div class="pillar-name">💐 Floral inspiration</div><div class="pillar-track"><div class="pillar-fill" style="width:35%;background:#4a7c59;"></div></div><div class="pillar-pct">—%</div></div>
+        <div class="pillar-row"><div class="pillar-name">💒 Real weddings</div><div class="pillar-track"><div class="pillar-fill" style="width:20%;background:#7a8c6e;"></div></div><div class="pillar-pct">—%</div></div>
+        <div class="pillar-row"><div class="pillar-name">💰 Pricing &amp; process</div><div class="pillar-track"><div class="pillar-fill" style="width:15%;background:#c8823a;"></div></div><div class="pillar-pct">—%</div></div>
+        <div class="pillar-row"><div class="pillar-name">🎬 Pop culture hooks</div><div class="pillar-track"><div class="pillar-fill" style="width:20%;background:#b94a48;"></div></div><div class="pillar-pct">—%</div></div>
+        <div class="pillar-row"><div class="pillar-name">🎥 Behind the scenes</div><div class="pillar-track"><div class="pillar-fill" style="width:10%;background:#9a9a9a;"></div></div><div class="pillar-pct">—%</div></div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text-light);font-style:italic;">Connect Instagram Insights to auto-calculate from actual posts</div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:16px;">Recommended benchmark for Poppy</div>
+      <div class="pillar-bars">
+        <div class="pillar-row"><div class="pillar-name">💐 Floral inspiration</div><div class="pillar-track"><div class="pillar-fill" style="width:30%;background:#4a7c59;"></div></div><div class="pillar-pct">30%</div></div>
+        <div class="pillar-row"><div class="pillar-name">💒 Real weddings</div><div class="pillar-track"><div class="pillar-fill" style="width:25%;background:#7a8c6e;"></div></div><div class="pillar-pct">25%</div></div>
+        <div class="pillar-row"><div class="pillar-name">💰 Pricing &amp; process</div><div class="pillar-track"><div class="pillar-fill" style="width:20%;background:#c8823a;"></div></div><div class="pillar-pct">20%</div></div>
+        <div class="pillar-row"><div class="pillar-name">🎬 Pop culture hooks</div><div class="pillar-track"><div class="pillar-fill" style="width:15%;background:#b94a48;"></div></div><div class="pillar-pct">15%</div></div>
+        <div class="pillar-row"><div class="pillar-name">🎥 Behind the scenes</div><div class="pillar-track"><div class="pillar-fill" style="width:10%;background:#9a9a9a;"></div></div><div class="pillar-pct">10%</div></div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--text-light);">⚠️ The <strong>Pricing &amp; Process</strong> pillar (20%) drives the most leads for Poppy — if it drops below 15%, increase it.</div>
+    </div>
+  </div>
+
+  <!-- Hook analysis -->
+  <div class="section-label">Hook Analysis · What Works for Poppy</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:14px;">Hooks ranked by average views — based on Poppy's actual content history</div>
+    <table class="ab-table">
+      <thead><tr><th>Hook Type</th><th>Example</th><th>Avg Views</th><th>Why It Works</th></tr></thead>
+      <tbody>
+        <tr class="winner-row">
+          <td>Celebrity + price</td>
+          <td style="font-size:11px;">"Selena Gomez's bouquet — how much does it cost?"</td>
+          <td>63.4K</td>
+          <td style="font-size:11px;color:var(--text-mid);">Curiosity + cultural relevance + pricing pillar</td>
+        </tr>
+        <tr class="winner-row">
+          <td>Cultural trend + flowers</td>
+          <td style="font-size:11px;">"Color of the Year 2025 at your wedding"</td>
+          <td>2.3M</td>
+          <td style="font-size:11px;color:var(--text-mid);">Trend SEO + massive search volume at launch</td>
+        </tr>
+        <tr>
+          <td>Wedding month + flower</td>
+          <td style="font-size:11px;">"Tell me your wedding month, I'll tell you the flower"</td>
+          <td>26.2K</td>
+          <td style="font-size:11px;color:var(--text-mid);">Personalization + drives active comment participation</td>
+        </tr>
+        <tr>
+          <td>TV / Movie reference + wedding</td>
+          <td style="font-size:11px;">"If Lorelai Gilmore walked down the aisle..."</td>
+          <td>14.6K</td>
+          <td style="font-size:11px;color:var(--text-mid);">Nostalgia + fan community + aspirational framing</td>
+        </tr>
+        <tr>
+          <td>Generic behind the scenes</td>
+          <td style="font-size:11px;">"The real story behind Poppy"</td>
+          <td>668</td>
+          <td style="font-size:11px;color:var(--red-warn);">No clear hook, no immediate benefit for the bride</td>
+        </tr>
+        <tr>
+          <td>Entertainment / drama</td>
+          <td style="font-size:11px;">"We're not here to judge..."</td>
+          <td>751</td>
+          <td style="font-size:11px;color:var(--red-warn);">Doesn't reach audience in purchase mode</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="insight-box" style="margin-top:14px;">
+      <h4>📌 Poppy's Winning TikTok Formula</h4>
+      <p><strong>[Well-known cultural reference] + [wedding flowers] + [price or specific fact]</strong><br/>
+      Examples: "X celebrity's bouquet — what would something similar cost?" / "If X character got married, she'd choose these flowers" / "The Pantone color of 2026 in wedding florals".</p>
+    </div>
+  </div>
+
+  <!-- Best time to post -->
+  <div class="section-label">⏰ Best Time to Post (Wedding Niche)</div>
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">📸 Instagram — Best Posting Times</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Best Day</div><div style="font-size:18px;font-weight:700;color:var(--olive);">Tuesday</div><div style="font-size:11px;color:var(--text-light);">and Wednesday</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Best Time</div><div style="font-size:18px;font-weight:700;color:var(--olive);">7–9 PM</div><div style="font-size:11px;color:var(--text-light);">local time</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">2nd Best</div><div style="font-size:18px;font-weight:700;color:var(--olive-light);">Sunday</div><div style="font-size:11px;color:var(--text-light);">wedding planning mode</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Avoid</div><div style="font-size:18px;font-weight:700;color:var(--red-warn);">Monday</div><div style="font-size:11px;color:var(--text-light);">lowest engagement</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-light);">*Based on wedding niche benchmarks. Connect Insights for @poppyflowersco-specific data.</div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">🎵 TikTok — Best Posting Times</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Best Day</div><div style="font-size:18px;font-weight:700;color:var(--olive);">Friday</div><div style="font-size:11px;color:var(--text-light);">and Saturday</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Best Time</div><div style="font-size:18px;font-weight:700;color:var(--olive);">6–10 PM</div><div style="font-size:11px;color:var(--text-light);">local time</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">2nd Best</div><div style="font-size:18px;font-weight:700;color:var(--olive-light);">Tuesday</div><div style="font-size:11px;color:var(--text-light);">7–9 AM</div></div>
+        <div class="card-sm" style="text-align:center;"><div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Key Insight</div><div style="font-size:15px;font-weight:700;color:var(--amber);">Consistency</div><div style="font-size:11px;color:var(--text-light);">beats exact timing</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-light);">*On TikTok, posting consistency matters more than exact time. Connect Analytics for audience-specific data.</div>
+    </div>
+  </div>
+
+  <!-- Content ideas -->
+  <div class="section-label">💡 Content Ideas · This Week</div>
+  <div class="grid-3">
+    <div class="idea-card">
+      <div class="idea-num">Idea 01</div>
+      <div class="idea-hook">"The Pantone color of the perfect 2026 wedding — and the flowers that match it"</div>
+      <div class="idea-meta">
+        <span class="idea-tag idea-format">Reel / TikTok</span>
+        <span class="idea-tag idea-platform">IG + TikTok</span>
+      </div>
+      <div class="idea-why">Replicates the formula from the 2.3M view viral video. Pantone announces color trends = massive search volume. Poppy connects it to wedding flowers. Hook: "The color every 2026 bride will use". End with a booking CTA.</div>
+    </div>
+    <div class="idea-card">
+      <div class="idea-num">Idea 02</div>
+      <div class="idea-hook">"Your wedding flowers cost $X — here's exactly where every dollar goes"</div>
+      <div class="idea-meta">
+        <span class="idea-tag idea-format">Carousel</span>
+        <span class="idea-tag idea-platform">Instagram</span>
+      </div>
+      <div class="idea-why">Pricing transparency is Poppy's strongest pillar. A carousel that breaks down the floral budget for a real wedding slide by slide. Generates massive saves because brides bookmark it to compare with other quotes. Very high booking intent.</div>
+    </div>
+    <div class="idea-card">
+      <div class="idea-num">Idea 03</div>
+      <div class="idea-hook">"If [trending celebrity] got married this month, she'd choose these flowers"</div>
+      <div class="idea-meta">
+        <span class="idea-tag idea-format">TikTok / Reel</span>
+        <span class="idea-tag idea-platform">TikTok + IG</span>
+      </div>
+      <div class="idea-why">The "If X celebrity got married" formula works consistently for Poppy (Selena: 63.4K, Lorelai: 14.6K). Find who's trending this week and make the floral version. Use the trending audio of the moment for extra distribution boost.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- TAB: TRENDS -->
+<!-- ══════════════════════════════════════ -->
+<div class="tab-content" id="tab-trends">
+
+  <div class="section-label">🔥 Trending Now · Instagram &amp; TikTok</div>
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px;">📸 Instagram — This Week's Trends</div>
+      <div class="trend-item">
+        <div class="trend-emoji">🎶</div>
+        <div class="trend-body">
+          <div class="trend-title">Trending audio &amp; sounds</div>
+          <div class="trend-desc">Connect to see which audios are going viral in the wedding/florals niche on IG this week.</div>
+          <div class="trend-action">→ The 10AM daily report pulls this automatically every morning</div>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-emoji">#️⃣</div>
+        <div class="trend-body">
+          <div class="trend-title">Hashtags with highest reach this week</div>
+          <div class="trend-desc">Niche hashtags gaining traction in the wedding space right now.</div>
+          <div class="trend-action">→ Updated daily in the 10AM report</div>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-emoji">📱</div>
+        <div class="trend-body">
+          <div class="trend-title">Trending format: Short Reels (15–30s)</div>
+          <div class="trend-desc">In 2026, Reels under 30 seconds are receiving the highest distribution boost on IG. Poppy should test more content in this format.</div>
+          <div class="trend-action">→ Action: Create a 20-second cut of your next video</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px;">🎵 TikTok — This Week's Trends</div>
+      <div class="trend-item">
+        <div class="trend-emoji">🎵</div>
+        <div class="trend-body">
+          <div class="trend-title">Viral sounds applicable to Poppy</div>
+          <div class="trend-desc">Trending sounds that Poppy can use in flowers and wedding content.</div>
+          <div class="trend-action">→ Updated daily at 10AM with niche-specific sounds</div>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-emoji">🌸</div>
+        <div class="trend-body">
+          <div class="trend-title">Viral content in the wedding niche this week</div>
+          <div class="trend-desc">What wedding and floral accounts are exploding in views right now — plus competitor analysis.</div>
+          <div class="trend-action">→ Updated daily — competitor analysis included</div>
+        </div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-emoji">👁️</div>
+        <div class="trend-body">
+          <div class="trend-title">Hook trend: "POV: you're a bride who..."</div>
+          <div class="trend-desc">POV bride hooks remain one of the strongest on TikTok wedding. Immediate personalization that grabs the target audience.</div>
+          <div class="trend-action">→ "POV: you just booked your wedding flowers with Poppy 🌸"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social listening -->
+  <div class="section-label">👂 Social Listening · What Brides Are Talking About This Week</div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Relevant conversations for Poppy across social media</div>
+    <div class="trend-item">
+      <div class="trend-emoji">💬</div>
+      <div class="trend-body">
+        <div class="trend-title">Unanswered questions on competitor accounts</div>
+        <div class="trend-desc">Connect the daily report to automatically monitor what brides are asking on accounts similar to Poppy — those unanswered questions are direct content opportunities.</div>
+        <div class="trend-action">→ Every unanswered question in the niche = a post Poppy can make</div>
+      </div>
+    </div>
+    <div class="trend-item">
+      <div class="trend-emoji">🔍</div>
+      <div class="trend-body">
+        <div class="trend-title">Rising searches in the wedding flowers niche</div>
+        <div class="trend-desc">Updated daily with trending searches from Google Trends, Pinterest Trends, and TikTok Search in the wedding florals niche.</div>
+        <div class="trend-action">→ The 10AM report includes the top 5 searches of the day</div>
+      </div>
+    </div>
+    <div class="insight-box" style="margin-top:14px;">
+      <h4>🎯 Social listening opportunity for Poppy right now</h4>
+      <p>Search TikTok and Reddit for "wedding florist" + "too expensive" or "budget wedding flowers" — that's where brides who want beautiful flowers but are scared of the price are hiding. That's exactly Poppy's audience. Creating content that addresses those price fears transparently is the highest-converting content Poppy can make.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Poppy Flowers Command Center v2.0 · Social &amp; Marketing Intelligence · Updated daily at 10:00 AM · <span id="footerDate"></span>
+</footer>
+
+<script>
+function formatDate(d) {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+const now = new Date();
+const dateStr = formatDate(now);
+document.getElementById('headerDate').textContent = dateStr;
+document.getElementById('footerDate').textContent = dateStr;
+
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'ads') initAdCharts();
+}
+
+let adChartsInit = false;
+function initAdCharts() {
+  if (adChartsInit) return;
+  adChartsInit = true;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = '#9a9a9a';
+  Chart.defaults.borderColor = '#e4ded6';
+
+  // Donut
+  new Chart(document.getElementById('donutChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Video', 'Carousel', 'Static'],
+      datasets: [{ data: [56, 28, 16], backgroundColor: ['#4a7c59','#3a5490','#c9a98f'], borderWidth: 0, hoverOffset: 5 }]
+    },
+    options: { cutout: '68%', plugins: { legend: { display: false } }, responsive: true, maintainAspectRatio: false }
+  });
+
+  // Territory concepts
+  new Chart(document.getElementById('terrChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['T1 Budget', 'T3 Social Proof', 'T2 Luxury', 'T4 Collections'],
+      datasets: [{ label: 'Concepts', data: [3, 5, 1, 0], backgroundColor: ['#4a7c59','#3a5490','#c9a98f','#7a5c8a'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#e4ded6' }, ticks: { stepSize: 1 } }, y: { grid: { display: false } } },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+
+  // CVR by territory
+  new Chart(document.getElementById('cvrChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: ['T1 Budget', 'T3 Social Proof', 'T2 Luxury', 'T4 Collections'],
+      datasets: [{ label: 'Avg CVR %', data: [4.07, 3.85, 3.87, null], backgroundColor: ['#4a7c59','#3a5490','#c9a98f','#e4ded6'], borderRadius: 6, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.x ? ` ${ctx.parsed.x.toFixed(2)}% CVR` : ' Not yet tested' } } },
+      scales: { x: { grid: { color: '#e4ded6' }, ticks: { callback: v => v + '%' }, min: 0, max: 6 }, y: { grid: { display: false } } },
+      responsive: true, maintainAspectRatio: false
+    }
+  });
+}
+</script>
+</body>
+</html>
